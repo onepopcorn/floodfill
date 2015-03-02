@@ -14,6 +14,7 @@
 			removeClass(board.children[i],"start");
 		}
 
+		removeClass(e.currentTarget,"wall");
 		swapClass(e.currentTarget,"start");
 		return;
 	};
@@ -29,6 +30,9 @@
 			el.addEventListener("click",clickHandler);
 			el.addEventListener("contextmenu",contextHandler);
 			board.appendChild(el);
+
+			// This is used to adjust rows/colums  number
+			board.style.width = ROWS * 30 + "px";
 		}
 	};
 	// Switch wall class for selected tile
