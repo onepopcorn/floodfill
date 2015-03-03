@@ -3,7 +3,7 @@
 	var board = document.querySelector('#gameboard'),
 		ROWS = 10,
 		COLS = 10,
-		TOTAL_TILES = ROWS * COLS;
+		tiles = [];
 
 	function clickHandler(e) {
 		swapClass(e.currentTarget,"wall");
@@ -25,17 +25,25 @@
 		// Set board size
 		board.style.width = COLS * 30 + "px";
 		// Create tiles
-		for(var i=0;i<TOTAL_TILES;i++)
+		for(var i=0;i<ROWS;i++)
 		{
-			var el = document.createElement('div');
-			el.id = i;
-			el.className = 'tile';
-
-			el.addEventListener("click",clickHandler);
-			el.addEventListener("contextmenu",contextHandler);
-			board.appendChild(el);
+			tiles.push([])
+			for(var j=0;j<COLS;j++)
+			{
+				// Create DOM elements & style it
+				var el = document.createElement('div');
+				el.id = i * ROWS + j;
+				el.className = 'tile';
+				// Bind events to the element
+				el.addEventListener("click",clickHandler);
+				el.addEventListener("contextmenu",contextHandler);
+				board.appendChild(el);
+				// Create tiles array 
+				tiles[i].push(0);
+			}
 		}
 		
+		console.log(tiles);
 	}
 
 	function start(){
