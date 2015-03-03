@@ -1,9 +1,19 @@
 (function(){
 	'use strict';
-	var board = document.querySelector('#gameboard'),
-		ROWS = 10,
-		COLS = 10,
-		tiles = [];
+	var board      = document.querySelector('#gameboard'),
+		ROWS       = 10,
+		COLS       = 10,
+		tiles      = [],
+		DIRECTIONS = [
+			{"row":-1,"col":-1}, // Upper left tile
+			{"row":-1,"col":0}, // Upper tile
+			{"row":-1,"col":1}, // Upper right tile
+			{"row":0,"col":1}, // Right tile
+			{"row":+1,"col":+1}, // Right down tile
+			{"row":+1,"col":0}, // Down tile
+			{"row":+1,"col":-1}, // Down left tile
+			{"row":0,"col":-1}, // Left tile
+		];
 
 	function clickHandler(e) {
 		swapClass(e.currentTarget,"wall");
@@ -11,9 +21,7 @@
 
 	function contextHandler(e){
 		e.preventDefault();
-		for(var i=0;i<TOTAL_TILES;i++){
-			removeClass(board.children[i],"start");
-		}
+		removeClass(document.querySelector('.start'),"start");
 
 		removeClass(e.currentTarget,"wall");
 		swapClass(e.currentTarget,"start");
@@ -42,28 +50,50 @@
 				tiles[i].push(0);
 			}
 		}
-		
-		console.log(tiles);
+		// bind start button
+		document.querySelector('#startBtn').addEventListener('click',start);
 	}
 
 	function start(){
-
+		var startNode = document.querySelector('.start');
+		floodfill(startNode,startNode.className,'processed');
 	}
 
-	function floodfill(element,currentType,targetType){
+	function floodfill(node,currentType,targetType){
 		if(currentType == targetType){
 			return;
 		}
 
-		if(element.type != targetType){
+		if(node.type != targetType){
 			return;
 		}
 		// Do here whatever you want
+		swapClass(node,'processed');
 
 		// Do floodfill recursively in 8 directions
-		// pseudo-code: for each direction do floodfill(); 
+		var coords = getCoordsFromIndex(node.id);
+		for(var i in DIRECTIONS)
+		{
+			var dir = DIRECTIONS[i];
+
+		}
 
 		return;
+	}
+
+	function isInBounds(row,col){
+		return row >= 0 && row < ROWS_NUM && col >= 0 && col < COLS_NUM;
+	};
+
+	function getCoordsFromIndex(idx){
+		var col = Math.floor(idx / COLS),
+			row = idx - col * ROWS;
+		return [row,col];
+	}
+
+	function getIndexFromCoords(row,col){
+		var idx = row * ROWS + col; 
+		return idx;
 	}
 
 	// Switch wall class for selected tile
@@ -82,12 +112,16 @@
 	}
 
 	function removeClass(el,classname){
+		if(!el)
+		{
+			return;
+		}
+
 		var classes = el.className.split(" "),
 			i = classes.indexOf(classname);
 		if(i !== -1)
 		{
 			classes.splice(i,1);
-			console.log(classes);
 			el.className = classes.join(" ");
 		}
 	}
