@@ -4,6 +4,10 @@
 		ROWS       = 10,
 		COLS       = 10,
 		tiles      = [],
+		NORMAL     = 0,
+		WALL       = 1,
+		START      = 2,
+		PROCESSED  = 3,
 		DIRECTIONS = [
 			{"row":-1,"col":-1}, // Upper left tile
 			{"row":-1,"col":0}, // Upper tile
@@ -47,7 +51,7 @@
 				el.addEventListener("contextmenu",contextHandler);
 				board.appendChild(el);
 				// Create tiles array 
-				tiles[i].push(0);
+				tiles[i].push(NORMAL);
 			}
 		}
 		// bind start button
@@ -55,34 +59,46 @@
 	}
 
 	function start(){
-		var startNode = document.querySelector('.start');
-		floodfill(startNode,startNode.className,'processed');
+		var startNode = document.querySelector('.start'),
+			coords = getCoordsFromIndex(startNode.id);
+		
+		floodfill(coords,NORMAL,PROCESSED);
 	}
-
-	function floodfill(node,currentType,targetType){
-		if(currentType == targetType){
+	// Params: Current analized node type | color that can be replaced | color to replace with 
+	function floodfill(currentTypeCoords,targetType,replacementType){
+		// Get current type
+		var currentType = tiles[currentTypeCoords[0]][currentTypeCoords[1]];
+		
+		console.log(currentType,targetType,replacementType);
+		if(targetType == replacementType){
+			console.log('target type and replacement type are the same');
 			return;
 		}
 
-		if(node.type != targetType){
+		if(currentType != targetType){
+			console.log('current type is differents than target type');
 			return;
 		}
 		// Do here whatever you want
-		swapClass(node,'processed');
+		
 
 		// Do floodfill recursively in 8 directions
-		var coords = getCoordsFromIndex(node.id);
 		for(var i in DIRECTIONS)
 		{
-			var dir = DIRECTIONS[i];
-
+			var dir = DIRECTIONS[i],
+				nextRow = currentTypeCoords[0] + dir.row,
+				nextCol = currentTypeCoords[1] + dir.col;
+				if(isInBounds(nextRow,nextCol))
+				{
+					floodfill([nextRow,nextCol],NORMAL,PROCESSED);
+				}
 		}
 
 		return;
 	}
 
 	function isInBounds(row,col){
-		return row >= 0 && row < ROWS_NUM && col >= 0 && col < COLS_NUM;
+		return row >= 0 && row < ROWS && col >= 0 && col < COLS;
 	};
 
 	function getCoordsFromIndex(idx){
