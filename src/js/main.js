@@ -19,16 +19,68 @@
 			{"row":0,"col":-1}, // Left tile
 		];
 
+	/******** tile class ********/
+	var Tile = function(id){
+		// Setup type
+		this.type = NORMAL;
+		// Create DOM element
+		this.el = document.createElement('div');
+		this.el.className = 'tile';
+		this.el.id = id;
+		// Bind events
+		this.el.addEventListener('click',clickHandler);
+		this.el.addEventListener('contextmenu',contextHandler);
+	};
+	// Tile class methods
+	Tile.prototype.setType = function(type){
+		var classname;
+		switch(type){
+			case WALL:
+				classname = 'tile wall';
+				break;
+			case PROCESSED:
+				classname = 'tile processed';
+				break;
+			case START:
+				classname = 'tile start';
+				break;
+			default:
+				classname = 'tile';
+		}
+		this.el.className = classname;
+		this.type = type;
+	};
+
+	Tile.prototype.toggleWall = function(){
+		if(this.type !== WALL)
+			this.setType(WALL);
+		else
+			this.setType(NORMAL);
+	};
+
+	Tile.prototype.toggleStart = function(){
+		// Only one start point at a time
+		if(this.type !== START)
+		{
+			var el = document.querySelector('.start');
+			if(el)
+			{
+				var coords = getCoordsFromIndex(el.id);
+				tiles[coords[1]][coords[0]].setType(NORMAL);
+			}
+			this.setType(START);
+		}
+	};
+
 	function clickHandler(e) {
-		swapClass(e.currentTarget,"wall");
+		var coords = getCoordsFromIndex(e.currentTarget.id);
+		tiles[coords[1]][coords[0]].toggleWall();
 	}
 
 	function contextHandler(e){
 		e.preventDefault();
-		removeClass(document.querySelector('.start'),"start");
-
-		removeClass(e.currentTarget,"wall");
-		swapClass(e.currentTarget,"start");
+		var coords = getCoordsFromIndex(e.currentTarget.id);
+		tiles[coords[1]][coords[0]].toggleStart();
 		return;
 	}
 
@@ -39,19 +91,12 @@
 		// Create tiles
 		for(var i=0;i<ROWS;i++)
 		{
-			tiles.push([])
+			tiles.push([]);
 			for(var j=0;j<COLS;j++)
 			{
-				// Create DOM elements & style it
-				var el = document.createElement('div');
-				el.id = i * ROWS + j;
-				el.className = 'tile';
-				// Bind events to the element
-				el.addEventListener("click",clickHandler);
-				el.addEventListener("contextmenu",contextHandler);
-				board.appendChild(el);
-				// Create tiles array 
-				tiles[i].push(NORMAL);
+				var t = new Tile(i * ROWS + j);
+				board.appendChild(t.el);
+				tiles[i].push(t);
 			}
 		}
 		// bind start button
@@ -59,47 +104,46 @@
 	}
 
 	function start(){
-		var startNode = document.querySelector('.start'),
-			coords = getCoordsFromIndex(startNode.id);
+		var el = document.querySelector('.start'),
+			coords = getCoordsFromIndex(el.id),
+			node = tiles[coords[1]][coords[0]];
+			// Must reset the start node type to enable the flood algorithm
+			node.type = NORMAL;
 		
-		floodfill(coords,NORMAL,PROCESSED);
+		floodfill(node,NORMAL,PROCESSED);
 	}
 	// Params: Current analized node type | color that can be replaced | color to replace with 
-	function floodfill(currentTypeCoords,targetType,replacementType){
+	function floodfill(node,targetType,replacementType){
 		// Get current type
-		var currentType = tiles[currentTypeCoords[0]][currentTypeCoords[1]];
-		
-		console.log(currentType,targetType,replacementType);
 		if(targetType == replacementType){
 			console.log('target type and replacement type are the same');
 			return;
 		}
 
-		if(currentType != targetType){
+		if(node.type != targetType){
 			console.log('current type is differents than target type');
 			return;
 		}
 		// Do here whatever you want
-		
+		node.setType(PROCESSED);
 
 		// Do floodfill recursively in 8 directions
-		for(var i in DIRECTIONS)
+		/*for(var i in DIRECTIONS)
 		{
 			var dir = DIRECTIONS[i],
-				nextRow = currentTypeCoords[0] + dir.row,
-				nextCol = currentTypeCoords[1] + dir.col;
-				if(isInBounds(nextRow,nextCol))
-				{
-					floodfill([nextRow,nextCol],NORMAL,PROCESSED);
-				}
-		}
-
+				nextRow = coords[0] + dir.row,
+				nextCol = coords[1] + dir.col;
+			if(isInBounds(nextRow,nextCol))
+			{
+				floodfill([nextRow,nextCol],NORMAL,PROCESSED);
+			}
+		}*/
 		return;
 	}
 
 	function isInBounds(row,col){
 		return row >= 0 && row < ROWS && col >= 0 && col < COLS;
-	};
+	}
 
 	function getCoordsFromIndex(idx){
 		var col = Math.floor(idx / COLS),
@@ -110,36 +154,6 @@
 	function getIndexFromCoords(row,col){
 		var idx = row * ROWS + col; 
 		return idx;
-	}
-
-	// Switch wall class for selected tile
-	function swapClass(el,classname){
-		var classes = el.className.split(" ");
-		
-		if(classes.indexOf(classname) === -1)
-		{
-		 	classes.push(classname);
-		} else {
-			var i = classes.indexOf(classname);
-			classes.splice(i,1);
-		}
-
-		el.className = classes.join(" ");
-	}
-
-	function removeClass(el,classname){
-		if(!el)
-		{
-			return;
-		}
-
-		var classes = el.className.split(" "),
-			i = classes.indexOf(classname);
-		if(i !== -1)
-		{
-			classes.splice(i,1);
-			el.className = classes.join(" ");
-		}
 	}
 	// Entry point
 	init();
