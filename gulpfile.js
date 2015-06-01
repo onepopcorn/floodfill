@@ -1,12 +1,15 @@
 var gulp   = require('gulp'),
 	jshint = require('gulp-jshint'),
-	uglify = require('gulp-uglifyjs'),
+	uglify = require('gulp-uglify'),
+	concat = require('gulp-concat'),
 	html   = require('gulp-htmlhint'),
-	sass   = require('gulp-sass'),
-	clean  = require('gulp-clean'),
+	sass   = require('gulp-ruby-sass'),
 	sync   = require('browser-sync'),
 	plumber= require('gulp-plumber'),
-	colors = require('colors');
+	colors = require('colors'),
+	del    = require('del'),
+	smaps  = require('gulp-sourcemaps')
+	vinylpaths = require('vinyl-paths');
 
 var paths = {
 	scripts : 'src/js/**/*.js',
@@ -26,17 +29,17 @@ function errorHanlder(err){
 ///////// Cleaning tasks /////////
 gulp.task('markup-clean',function(){
 	return gulp.src('bin/*.html')
-		   .pipe(clean());
+		   .pipe(vinylpaths(del));
 });
 
 gulp.task('scripts-clean',function(){
 	return gulp.src('bin/js/**/*.js')
-		   .pipe(clean());
+		   .pipe(vinylpaths(del));
 });
 
 gulp.task('styles-clean',function(){
 	return gulp.src('bin/css/**/*.css')
-		   .pipe(clean());
+		   .pipe(vinylpaths(del));
 });
 
 ///////// Main tasks /////////
@@ -54,16 +57,17 @@ gulp.task('scripts',['scripts-clean'],function(){
 		   .pipe(jshint())
 		   .pipe(jshint.reporter('default'))
 		   .on('error', errorHanlder)
-		   .pipe(uglify({outSourceMap:true}))
+		   .pipe(smaps.init())
+		   .pipe(uglify())
+		   .pipe(concat('main.js'))
 		   .on('error', errorHanlder)
+		   .pipe(smaps.write())
 		   .pipe(gulp.dest('bin/js'));
 });
 
 gulp.task('styles',['styles-clean'],function(){
-	return gulp.src(paths.styles)
-		   .pipe(plumber())
-		   .pipe(sass())
-		   .on('error', errorHanlder)
+	return sass('src/css',{style:'compressed'})
+		   .on('error',errorHanlder)
 		   .pipe(gulp.dest('bin/css'));
 });
 
